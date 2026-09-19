@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi RT Semeru 316</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      .print-only { display: block !important; }
+      body { background-color: white; color: black; }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 font-sans text-slate-800 min-h-screen">
+
+  <!-- Header / Navbar -->
+  <header class="bg-indigo-900 text-white shadow-lg sticky top-0 z-40 no-print">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="p-2 bg-indigo-700 rounded-lg">
+          <i class="fa-solid fa-building-user text-xl text-amber-400"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">CLUSTER SEMERU - DAYEUH 316</h1>
+          <p class="text-[11px] text-indigo-200">Adem Tentrem Bersaudara</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button id="btnAdminAuth" onclick="toggleAdminLogin()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 rounded-lg text-xs font-bold transition flex items-center gap-1.5 shadow">
+          <i class="fa-solid fa-lock" id="iconAdminAuth"></i>
+          <span id="labelAdminAuth">Login Admin</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="bg-indigo-800 text-indigo-100 text-xs font-medium border-t border-indigo-700/50">
+      <div class="max-w-7xl mx-auto px-2 flex space-x-1 overflow-x-auto">
+        <button id="tab-dashboard" onclick="switchTab('dashboard')" class="px-4 py-2.5 bg-indigo-900 text-white font-bold flex items-center gap-2 rounded-t-lg transition">
+          <i class="fa-solid fa-chart-pie"></i> Dashboard
+        </button>
+        <button id="tab-warga" onclick="switchTab('warga')" class="px-4 py-2.5 hover:bg-indigo-700 rounded-t-lg transition flex items-center gap-2">
+          <i class="fa-solid fa-users"></i> Data Warga
+        </button>
+        <button id="tab-transaksi" onclick="switchTab('transaksi')" class="px-4 py-2.5 hover:bg-indigo-700 rounded-t-lg transition flex items-center gap-2">
+          <i class="fa-solid fa-receipt"></i> Transaksi
+        </button>
+        <button id="tab-laporan" onclick="switchTab('laporan')" class="px-4 py-2.5 hover:bg-indigo-700 rounded-t-lg transition flex items-center gap-2">
+          <i class="fa-solid fa-file-invoice-dollar"></i> Laporan
+        </button>
+        <button id="tab-pengaturan" onclick="switchTab('pengaturan')" class="px-4 py-2.5 hover:bg-indigo-700 rounded-t-lg transition flex items-center gap-2 hidden">
+          <i class="fa-solid fa-gear"></i> Pengaturan
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="max-w-7xl mx-auto px-4 py-6">
+
+    <!-- SEC: DASHBOARD -->
+    <section id="sec-dashboard" class="space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+        <div>
+          <h2 class="text-base font-bold text-slate-800">Ringkasan Keuangan & Status Iuran</h2>
+          <p class="text-xs text-slate-500">Filter berdasarkan periode bulan dan tahun</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="dashFilterBulan" onchange="renderDashboard()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
+            <option value="01">Januari</option>
+            <option value="02">Februari</option>
+            <option value="03">Maret</option>
+            <option value="04">April</option>
+            <option value="05">Mei</option>
+            <option value="06">Juni</option>
+            <option value="07">Juli</option>
+            <option value="08">Agustus</option>
+            <option value="09">September</option>
+            <option value="10">Oktober</option>
+            <option value="11">November</option>
+            <option value="12">Desember</option>
+          </select>
+          <select id="dashFilterTahun" onchange="renderDashboard()" class="px-3 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold text-slate-700 bg-slate-50 focus:ring-2 focus:ring-indigo-500 outline-none">
+            <option value="2025">2025</option>
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Ringkasan Saldo Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 p-5 rounded-2xl text-white shadow-md">
+          <p class="text-xs text-indigo-200 font-medium">Total Kas Utama</p>
+          <h3 id="cardKasUtama" class="text-2xl font-black mt-1">Rp 0</h3>
+          <p class="text-[10px] text-indigo-200 mt-2"><i class="fa-solid fa-vault mr-1"></i> Saldo Kas Operasional RT</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 p-5 rounded-2xl text-white shadow-md">
+          <p class="text-xs text-emerald-200 font-medium">Total Kas Bansos</p>
+          <h3 id="cardKasBansos" class="text-2xl font-black mt-1">Rp 0</h3>
+          <p class="text-[10px] text-emerald-200 mt-2"><i class="fa-solid fa-hand-holding-heart mr-1"></i> Rp 5.000 / IPL Bulan</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-amber-500 to-amber-700 p-5 rounded-2xl text-white shadow-md">
+          <p class="text-xs text-amber-100 font-medium">Iuran Lunas Periode Ini</p>
+          <h3 id="cardWargaLunas" class="text-2xl font-black mt-1">0 Warga</h3>
+          <p class="text-[10px] text-amber-100 mt-2" id="cardPersenLunas">0% dari total warga</p>
+        </div>
+
+        <div class="bg-gradient-to-br from-rose-600 to-rose-800 p-5 rounded-2xl text-white shadow-md">
+          <p class="text-xs text-rose-200 font-medium">Belum Bayar IPL</p>
+          <h3 id="cardWargaBelum" class="text-2xl font-black mt-1">0 Warga</h3>
+          <p class="text-[10px] text-rose-200 mt-2"><i class="fa-solid fa-circle-exclamation mr-1"></i> Perlu Penagihan</p>
+        </div>
+      </div>
+
+      <!-- Quick Search & Actions -->
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+          <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-indigo-600"></i> Status Pembayaran IPL Warga
+          </h3>
+          <div class="w-full sm:w-auto flex gap-2">
+            <input type="text" id="dashSearchWarga" onkeyup="renderDashboard()" placeholder="Cari nama, no rumah, atau blok..." class="w-full sm:w-64 px-3 py-1.5 border border-slate-300 rounded-lg text-xs outline-none focus:ring-2 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-semibold">
+                <th class="p-3">No</th>
+                <th class="p-3">Nama Warga</th>
+                <th class="p-3">No. Rumah / Blok</th>
+                <th class="p-3">Status IPL</th>
+                <th class="p-3">Nominal</th>
+                <th class="p-3 text-center">Status Periode Ini</th>
+                <th class="p-3 text-center no-print">Aksi WA</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyDashWarga">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEC: DATA WARGA -->
+    <section id="sec-warga" class="space-y-6 hidden">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+        <div>
+          <h2 class="text-base font-bold text-slate-800">Master Data Warga RT 316</h2>
+          <p class="text-xs text-slate-500">Daftar lengkap warga dan nomor kontak</p>
+        </div>
+        <div id="adminWargaBtn" class="hidden">
+          <button onclick="openModalWarga()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-2">
+            <i class="fa-solid fa-user-plus"></i> Tambah Warga Baru
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-semibold">
+                <th class="p-3">No</th>
+                <th class="p-3">Nama Lengkap</th>
+                <th class="p-3">No. Rumah</th>
+                <th class="p-3">No. HP / WA</th>
+                <th class="p-3">Status Rumah</th>
+                <th class="p-3">Status IPL</th>
+                <th class="p-3 text-right">Nominal IPL</th>
+                <th class="p-3 text-center no-print">Aksi Admin</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyWarga">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEC: TRANSAKSI -->
+    <section id="sec-transaksi" class="space-y-6 hidden">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+        <div>
+          <h2 class="text-base font-bold text-slate-800">Riwayat Transaksi Keuangan</h2>
+          <p class="text-xs text-slate-500">Pencatatan uang masuk dan uang keluar</p>
+        </div>
+        <div id="adminTransBtn" class="flex gap-2">
+          <!-- Tombol Input Transaksi khusus Admin atau Pengurus -->
+          <button onclick="openModalInputTransaksi('masuk')" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-plus-circle"></i> Input Uang Masuk
+          </button>
+          <button onclick="openModalInputTransaksi('keluar')" class="px-3 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1.5 shadow">
+            <i class="fa-solid fa-minus-circle"></i> Input Uang Keluar
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 border-b border-slate-200 text-slate-700 font-semibold">
+                <th class="p-3">No</th>
+                <th class="p-3">Tanggal</th>
+                <th class="p-3">Tipe</th>
+                <th class="p-3">Kategori</th>
+                <th class="p-3">Warga / Rumah</th>
+                <th class="p-3">Keterangan</th>
+                <th class="p-3 text-right">Nominal</th>
+                <th class="p-3 text-center no-print">Aksi Admin</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyTransaksi">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEC: LAPORAN -->
+    <section id="sec-laporan" class="space-y-6 hidden">
+      <div class="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+        <div>
+          <h2 class="text-base font-bold text-slate-800">Laporan Keuangan Kas RT</h2>
+          <p class="text-xs text-slate-500">Cetak rekapitulasi keuangan untuk transparansi warga</p>
+        </div>
+        <button onclick="window.print()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold transition flex items-center gap-2">
+          <i class="fa-solid fa-print"></i> Cetak Laporan (PDF)
+        </button>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+        <div class="text-center border-b pb-4">
+          <h2 class="text-lg font-bold">LAPORAN KEUANGAN RT SEMERU DAYEUH 316</h2>
+          <p class="text-xs text-slate-500">Laporan Rekapitulasi Pembayaran IPL & Pengeluaran</p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4 text-xs font-semibold text-slate-700 bg-slate-50 p-4 rounded-xl">
+          <div>
+            <p>Total Pemasukan Kas Utama: <span id="lapTotalMasukUtama" class="text-emerald-600 font-bold">Rp 0</span></p>
+            <p>Total Pemasukan Kas Bansos: <span id="lapTotalMasukBansos" class="text-emerald-600 font-bold">Rp 0</span></p>
+          </div>
+          <div>
+            <p>Total Pengeluaran Operasional: <span id="lapTotalKeluarUtama" class="text-rose-600 font-bold">Rp 0</span></p>
+            <p>Total Pengeluaran Bansos: <span id="lapTotalKeluarBansos" class="text-rose-600 font-bold">Rp 0</span></p>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 border-b text-slate-700">
+                <th class="p-2">No</th>
+                <th class="p-2">Tanggal</th>
+                <th class="p-2">Kategori</th>
+                <th class="p-2">Keterangan</th>
+                <th class="p-2 text-right">Kas Utama</th>
+                <th class="p-2 text-right">Kas Bansos</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyLaporan">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEC: PENGATURAN (KHUSUS ADMIN) -->
+    <section id="sec-pengaturan" class="space-y-6 hidden">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 max-w-xl mx-auto space-y-4">
+        <h2 class="text-base font-bold text-slate-800 border-b pb-3 flex items-center gap-2">
+          <i class="fa-solid fa-gear text-indigo-600"></i> Pengaturan Aplikasi & Database
+        </h2>
+
+        <div class="space-y-2">
+          <h3 class="text-xs font-bold text-slate-700">Backup & Restore Database</h3>
+          <p class="text-xs text-slate-500">Unggah file JSON backup atau ekspor data ke perangkat lokal.</p>
+          <div class="flex gap-2 pt-2">
+            <button onclick="exportJSONDatabase()" class="w-1/2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-download"></i> Download Backup JSON
+            </button>
+            <button onclick="triggerRestoreJSON()" class="w-1/2 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold text-xs transition flex items-center justify-center gap-2">
+              <i class="fa-solid fa-upload"></i> Restore / Import JSON
+            </button>
+            <input type="file" id="inputJSONFile" accept=".json" class="hidden" onchange="importJSONDatabase(event)">
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- MODAL EDIT TRANSAKSI (KHUSUS ADMIN) -->
+  <div id="modalEditTransaksi" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+      <div class="bg-amber-600 px-6 py-4 flex justify-between items-center text-white">
+        <h3 class="font-bold text-base flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square"></i> Edit / Perbaikan Transaksi
+        </h3>
+        <button onclick="closeEditTransaksiModal()" class="text-amber-100 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form onsubmit="saveEditTransaksi(event)" class="p-6 space-y-4">
+        <input type="hidden" id="editTransId">
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tanggal Transaksi</label>
+            <input type="date" id="editTransTanggal" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Tipe Transaksi</label>
+            <select id="editTransTipe" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 outline-none">
+              <option value="masuk">Uang Masuk (+)</option>
+              <option value="keluar">Uang Keluar (-)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Kategori</label>
+            <select id="editTransKategori" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 outline-none">
+              <option value="Iuran RT">Iuran RT / IPL</option>
+              <option value="Sumbangan">Sumbangan</option>
+              <option value="Bansos">Bansos</option>
+              <option value="Kegiatan">Kegiatan / 17an</option>
+              <option value="Operasional">Operasional RT</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nominal (Rp)</label>
+            <input type="number" id="editTransNominal" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs font-bold text-amber-700 focus:ring-2 focus:ring-amber-500 outline-none">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nama Warga</label>
+            <input type="text" id="editTransNamaWarga" placeholder="Opsional" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">No. Rumah / Blok</label>
+            <input type="text" id="editTransNoRumah" placeholder="Contoh: HI 12" class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 outline-none">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Keterangan</label>
+          <textarea id="editTransKeterangan" rows="2" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 outline-none"></textarea>
+        </div>
+
+        <div class="flex space-x-2 pt-2">
+          <button type="button" onclick="closeEditTransaksiModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg font-semibold text-xs transition">
+            Batal
+          </button>
+          <button type="submit" class="w-1/2 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold text-xs transition shadow-md">
+            <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Perubahan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SCRIPT APPLICATION LOGIC -->
+  <script>
+    const STORAGE_WARGA = 'rt_316_warga';
+    const STORAGE_TRANS = 'rt_316_transaksi';
+    const STORAGE_PIN = 'rt_316_pin';
+
+    let dataWarga = [];
+    let dataTransaksi = [];
+    let adminPIN = '1234';
+    let isAdminLoggedIn = false;
+
+    window.onload = function() {
+      loadFromStorage();
+      setTodayFilters();
+      renderAll();
+    };
+
+    function loadFromStorage() {
+      const w = localStorage.getItem(STORAGE_WARGA);
+      const t = localStorage.getItem(STORAGE_TRANS);
+      const p = localStorage.getItem(STORAGE_PIN);
+
+      dataWarga = w ? JSON.parse(w) : [];
+      dataTransaksi = t ? JSON.parse(t) : [];
+      adminPIN = p ? p : '1234';
+    }
+
+    function saveWargaStorage() { localStorage.setItem(STORAGE_WARGA, JSON.stringify(dataWarga)); }
+    function saveTransStorage() { localStorage.setItem(STORAGE_TRANS, JSON.stringify(dataTransaksi)); }
+
+    function setTodayFilters() {
+      const today = new Date();
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const yyyy = String(today.getFullYear());
+      
+      const elB = document.getElementById('dashFilterBulan');
+      const elY = document.getElementById('dashFilterTahun');
+      if (elB) elB.value = mm;
+      if (elY) elY.value = yyyy;
+    }
+
+    function toggleAdminLogin() {
+      if (isAdminLoggedIn) {
+        isAdminLoggedIn = false;
+        alert("Anda telah Logout dari Akses Admin.");
+      } else {
+        const inputPIN = prompt("Masukkan PIN Admin RT Semeru 316:");
+        if (inputPIN === adminPIN) {
+          isAdminLoggedIn = true;
+          alert("Login Admin Berhasil!");
+        } else if (inputPIN !== null) {
+          alert("PIN Salah! Akses ditolak.");
+        }
+      }
+      updateAdminUI();
+    }
+
+    function updateAdminUI() {
+      const btnAuth = document.getElementById('labelAdminAuth');
+      const iconAuth = document.getElementById('iconAdminAuth');
+      const tabPengaturan = document.getElementById('tab-pengaturan');
+      const adminWargaBtn = document.getElementById('adminWargaBtn');
+
+      if (isAdminLoggedIn) {
+        btnAuth.innerText = "Admin (Logout)";
+        iconAuth.className = "fa-solid fa-unlock";
+        tabPengaturan.classList.remove('hidden');
+        if (adminWargaBtn) adminWargaBtn.classList.remove('hidden');
+      } else {
+        btnAuth.innerText = "Login Admin";
+        iconAuth.className = "fa-solid fa-lock";
+        tabPengaturan.classList.add('hidden');
+        if (adminWargaBtn) adminWargaBtn.classList.add('hidden');
+      }
+      renderTransaksiTable();
+      renderWargaTable();
+    }
+
+    function switchTab(tabName) {
+      if (tabName === 'pengaturan' && !isAdminLoggedIn) {
+        alert("Akses Ditolak: Hanya Admin yang dapat mengakses menu Pengaturan!");
+        return;
+      }
+
+      ['dashboard', 'warga', 'transaksi', 'laporan', 'pengaturan'].forEach(t => {
+        const sec = document.getElementById(`sec-${t}`);
+        const tab = document.getElementById(`tab-${t}`);
+        if (sec) sec.classList.add('hidden');
+        if (tab) {
+          tab.classList.remove('bg-indigo-900', 'text-white', 'font-bold');
+          tab.classList.add('hover:bg-indigo-700');
+        }
+      });
+
+      const activeSec = document.getElementById(`sec-${tabName}`);
+      const activeTab = document.getElementById(`tab-${tabName}`);
+      if (activeSec) activeSec.classList.remove('hidden');
+      if (activeTab) {
+        activeTab.classList.add('bg-indigo-900', 'text-white', 'font-bold');
+        activeTab.classList.remove('hover:bg-indigo-700');
+      }
+
+      if (tabName === 'dashboard') renderDashboard();
+      if (tabName === 'warga') renderWargaTable();
+      if (tabName === 'transaksi') renderTransaksiTable();
+      if (tabName === 'laporan') renderLaporan();
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderWargaTable();
+      renderTransaksiTable();
+      renderLaporan();
+      updateAdminUI();
+    }
+
+    // DASHBOARD LOGIC
+    function renderDashboard() {
+      const bln = document.getElementById('dashFilterBulan').value;
+      const thn = document.getElementById('dashFilterTahun').value;
+      const search = (document.getElementById('dashSearchWarga').value || '').toLowerCase();
+
+      let totalKasUtama = 0;
+      let totalKasBansos = 0;
+
+      dataTransaksi.forEach(t => {
+        const nom = Number(t.nominal) || 0;
+        const kUtama = Number(t.kasUtama) || 0;
+        const kBansos = Number(t.kasBansos) || 0;
+
+        if (t.tipe === 'masuk') {
+          totalKasUtama += kUtama;
+          totalKasBansos += kBansos;
+        } else {
+          totalKasUtama -= kUtama;
+          totalKasBansos -= kBansos;
+        }
+      });
+
+      document.getElementById('cardKasUtama').innerText = `Rp ${totalKasUtama.toLocaleString('id-ID')}`;
+      document.getElementById('cardKasBansos').innerText = `Rp ${totalKasBansos.toLocaleString('id-ID')}`;
+
+      const filteredWarga = dataWarga.filter(w => 
+        w.nama.toLowerCase().includes(search) || 
+        w.noRumah.toLowerCase().includes(search) ||
+        (w.blok && w.blok.toLowerCase().includes(search))
+      );
+
+      const targetPeriode = `${thn}-${bln}`;
+      let lunasCount = 0;
+
+      const tbody = document.getElementById('tbodyDashWarga');
+      tbody.innerHTML = '';
+
+      filteredWarga.forEach((w, idx) => {
+        // Cek pembayaran transaksi IPL warga
+        const isLunas = dataTransaksi.some(t => {
+          return t.tipe === 'masuk' && 
+                 t.tanggal.startsWith(targetPeriode) && 
+                 (t.noRumah === w.noRumah || t.namaWarga === w.nama);
+        });
+
+        if (isLunas) lunasCount++;
+
+        const badgeStatus = isLunas ? 
+          '<span class="px-2 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px]">LUNAS</span>' :
+          '<span class="px-2 py-1 rounded-full bg-rose-100 text-rose-800 font-bold text-[10px]">BELUM BAYAR</span>';
+
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-slate-100 hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-3 font-medium text-slate-500">${idx + 1}</td>
+          <td class="p-3 font-bold text-slate-700">${w.nama}</td>
+          <td class="p-3 font-semibold text-slate-600">${w.noRumah}</td>
+          <td class="p-3 text-slate-500">${w.statusIPL}</td>
+          <td class="p-3 font-semibold text-slate-700">Rp ${Number(w.nominalIPL || 55000).toLocaleString('id-ID')}</td>
+          <td class="p-3 text-center">${badgeStatus}</td>
+          <td class="p-3 text-center no-print">
+            <button onclick="sendWAStatus('${w.hp}', '${w.nama}', '${w.noRumah}', ${isLunas}, '${bln}/${thn}')" class="p-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md text-xs transition" title="Kirim WA">
+              <i class="fa-brands fa-whatsapp"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      const totalW = dataWarga.length || 1;
+      document.getElementById('cardWargaLunas').innerText = `${lunasCount} Warga`;
+      document.getElementById('cardWargaBelum').innerText = `${dataWarga.length - lunasCount} Warga`;
+      document.getElementById('cardPersenLunas').innerText = `${Math.round((lunasCount / totalW) * 100)}% dari total warga`;
+    }
+
+    // TABEL TRANSAKSI & EDIT
+    function renderTransaksiTable() {
+      const tbody = document.getElementById('tbodyTransaksi');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      dataTransaksi.forEach((item, index) => {
+        const isMasuk = item.tipe === 'masuk';
+        const badgeClass = isMasuk ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800';
+        
+        const adminActionBtn = isAdminLoggedIn ? `
+          <button onclick="openEditTransaksiModal(${item.id})" class="p-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-md text-xs transition" title="Edit Transaksi">
+            <i class="fa-solid fa-pen-to-square"></i>
+          </button>
+          <button onclick="hapusTransaksi(${item.id})" class="p-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-md text-xs transition ml-1" title="Hapus Transaksi">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        ` : '-';
+
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-100 hover:bg-slate-50 transition text-xs';
+        tr.innerHTML = `
+          <td class="p-3 font-medium text-slate-600">${index + 1}</td>
+          <td class="p-3 text-slate-700 font-semibold">${item.tanggal}</td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 rounded-full font-semibold text-[10px] ${badgeClass}">
+              ${item.tipe.toUpperCase()}
+            </span>
+          </td>
+          <td class="p-3 font-medium text-slate-700">${item.kategori || '-'}</td>
+          <td class="p-3 text-slate-600">${item.namaWarga || '-'} (${item.noRumah || '-'})</td>
+          <td class="p-3 text-slate-600">${item.keterangan || '-'}</td>
+          <td class="p-3 font-bold ${isMasuk ? 'text-emerald-600' : 'text-rose-600'} text-right">
+            ${isMasuk ? '+' : '-'} Rp ${Number(item.nominal).toLocaleString('id-ID')}
+          </td>
+          <td class="p-3 text-center no-print">${adminActionBtn}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // MODAL EDIT TRANSAKSI LOGIC
+    function openEditTransaksiModal(id) {
+      if (!isAdminLoggedIn) {
+        alert("Akses ditolak: Hanya Admin yang dapat mengedit transaksi!");
+        return;
+      }
+
+      const trans = dataTransaksi.find(t => t.id === id);
+      if (!trans) return;
+
+      document.getElementById('editTransId').value = trans.id;
+      document.getElementById('editTransTanggal').value = trans.tanggal;
+      document.getElementById('editTransTipe').value = trans.tipe;
+      document.getElementById('editTransKategori').value = trans.kategori || 'Iuran RT';
+      document.getElementById('editTransNamaWarga').value = trans.namaWarga || '';
+      document.getElementById('editTransNoRumah').value = trans.noRumah || '';
+      document.getElementById('editTransNominal').value = trans.nominal;
+      document.getElementById('editTransKeterangan').value = trans.keterangan || '';
+
+      document.getElementById('modalEditTransaksi').classList.remove('hidden');
+    }
+
+    function closeEditTransaksiModal() {
+      document.getElementById('modalEditTransaksi').classList.add('hidden');
+    }
+
+    function saveEditTransaksi(e) {
+      e.preventDefault();
+      if (!isAdminLoggedIn) {
+        alert("Akses ditolak: Hanya Admin yang dapat memperbarui transaksi!");
+        return;
+      }
+
+      const id = parseInt(document.getElementById('editTransId').value);
+      const index = dataTransaksi.findIndex(t => t.id === id);
+
+      if (index === -1) {
+        alert("Data transaksi tidak ditemukan!");
+        return;
+      }
+
+      const nominal = parseInt(document.getElementById('editTransNominal').value) || 0;
+      const tipe = document.getElementById('editTransTipe').value;
+      const kategori = document.getElementById('editTransKategori').value;
+
+      let kasUtama = 0;
+      let kasBansos = 0;
+
+      // Hitung otomatis pembagian Kas jika IPL Normal (Rp 55.000)
+      if (tipe === 'masuk' && nominal === 55000 && (kategori === 'Iuran RT' || kategori === 'IPL')) {
+        kasUtama = 50000;
+        kasBansos = 5000;
+      } else if (kategori === 'Bansos') {
+        kasUtama = 0;
+        kasBansos = nominal;
+      } else {
+        kasUtama = nominal;
+        kasBansos = 0;
+      }
+
+      dataTransaksi[index] = {
+        ...dataTransaksi[index],
+        tanggal: document.getElementById('editTransTanggal').value,
+        tipe: tipe,
+        kategori: kategori,
+        namaWarga: document.getElementById('editTransNamaWarga').value,
+        noRumah: document.getElementById('editTransNoRumah').value,
+        nominal: nominal,
+        kasUtama: kasUtama,
+        kasBansos: kasBansos,
+        keterangan: document.getElementById('editTransKeterangan').value
+      };
+
+      saveTransStorage();
+      closeEditTransaksiModal();
+      renderAll();
+      alert("Transaksi berhasil diperbarui!");
+    }
+
+    function hapusTransaksi(id) {
+      if (!isAdminLoggedIn) return;
+      if (confirm("Apakah Anda yakin ingin menghapus transaksi ini?")) {
+        dataTransaksi = dataTransaksi.filter(t => t.id !== id);
+        saveTransStorage();
+        renderAll();
+      }
+    }
+
+    // WARGA TABLE
+    function renderWargaTable() {
+      const tbody = document.getElementById('tbodyWarga');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      dataWarga.forEach((w, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-slate-100 hover:bg-slate-50";
+        tr.innerHTML = `
+          <td class="p-3 text-slate-500">${idx + 1}</td>
+          <td class="p-3 font-bold text-slate-700">${w.nama}</td>
+          <td class="p-3 font-semibold text-slate-600">${w.noRumah}</td>
+          <td class="p-3 text-slate-600">${w.hp || '-'}</td>
+          <td class="p-3 text-slate-600">${w.statusRumah}</td>
+          <td class="p-3 text-slate-600">${w.statusIPL}</td>
+          <td class="p-3 font-semibold text-slate-700 text-right">Rp ${Number(w.nominalIPL || 55000).toLocaleString('id-ID')}</td>
+          <td class="p-3 text-center no-print">${isAdminLoggedIn ? `<button onclick="hapusWarga(${w.id})" class="p-1.5 bg-rose-500 text-white rounded text-xs"><i class="fa-solid fa-trash"></i></button>` : '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function hapusWarga(id) {
+      if (!isAdminLoggedIn) return;
+      if (confirm("Hapus data warga ini?")) {
+        dataWarga = dataWarga.filter(w => w.id !== id);
+        saveWargaStorage();
+        renderAll();
+      }
+    }
+
+    // LAPORAN LOGIC
+    function renderLaporan() {
+      let mUtama = 0, mBansos = 0, kUtama = 0, kBansos = 0;
+      const tbody = document.getElementById('tbodyLaporan');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      dataTransaksi.forEach((t, idx) => {
+        const nomU = Number(t.kasUtama) || 0;
+        const nomB = Number(t.kasBansos) || 0;
+
+        if (t.tipe === 'masuk') {
+          mUtama += nomU;
+          mBansos += nomB;
+        } else {
+          kUtama += nomU;
+          kBansos += nomB;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = "border-b border-slate-100";
+        tr.innerHTML = `
+          <td class="p-2 text-slate-500">${idx + 1}</td>
+          <td class="p-2 font-semibold">${t.tanggal}</td>
+          <td class="p-2">${t.kategori || '-'}</td>
+          <td class="p-2">${t.keterangan || '-'}</td>
+          <td class="p-2 text-right font-semibold ${t.tipe === 'masuk' ? 'text-emerald-600' : 'text-rose-600'}">Rp ${nomU.toLocaleString('id-ID')}</td>
+          <td class="p-2 text-right font-semibold ${t.tipe === 'masuk' ? 'text-emerald-600' : 'text-rose-600'}">Rp ${nomB.toLocaleString('id-ID')}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('lapTotalMasukUtama').innerText = `Rp ${mUtama.toLocaleString('id-ID')}`;
+      document.getElementById('lapTotalMasukBansos').innerText = `Rp ${mBansos.toLocaleString('id-ID')}`;
+      document.getElementById('lapTotalKeluarUtama').innerText = `Rp ${kUtama.toLocaleString('id-ID')}`;
+      document.getElementById('lapTotalKeluarBansos').innerText = `Rp ${kBansos.toLocaleString('id-ID')}`;
+    }
+
+    // UTILS & BACKUP / RESTORE
+    function sendWAStatus(hp, nama, noRumah, isLunas, periode) {
+      if (!hp) return alert("Nomor WA tidak tersedia!");
+      let cleanHp = hp.replace(/[^0-9]/g, '');
+      if (cleanHp.startsWith('0')) cleanHp = '62' + cleanHp.slice(1);
+
+      let msg = isLunas ?
+        `Halo Bpk/Ibu ${nama} (${noRumah}), terima kasih! Pembayaran Iuran RT Periode ${periode} telah LUNAS.` :
+        `Halo Bpk/Ibu ${nama} (${noRumah}), mengingatkan untuk pembayaran Iuran RT Periode ${periode}. Terima kasih!`;
+
+      window.open(`https://wa.me/${cleanHp}?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    function exportJSONDatabase() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+        warga: dataWarga,
+        transaksi: dataTransaksi,
+        exportDate: new Date().toISOString()
+      }, null, 2));
+
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", "DATABASE_RT_316_BACKUP.json");
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    function triggerRestoreJSON() {
+      document.getElementById('inputJSONFile').click();
+    }
+
+    function importJSONDatabase(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          if (importedData.warga && importedData.transaksi) {
+            dataWarga = importedData.warga;
+            dataTransaksi = importedData.transaksi;
+            saveWargaStorage();
+            saveTransStorage();
+            renderAll();
+            alert("Database RT 316 berhasil di-restore!");
+          } else {
+            alert("Format JSON tidak valid!");
+          }
+        } catch (err) {
+          alert("Gagal membaca file JSON!");
+        }
+      };
+      reader.readAsText(file);
+    }
+  </script>
+</body>
+</html>
